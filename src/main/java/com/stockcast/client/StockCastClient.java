@@ -204,7 +204,6 @@ public class StockCastClient {
         if (parts.length >= 4) {
             String ticker = parts[1];
             String price = parts[2];
-            String timestamp = parts[3];
             String change = parts.length > 4 ? parts[4] : "0.00%";
 
             // Color coding for price changes
