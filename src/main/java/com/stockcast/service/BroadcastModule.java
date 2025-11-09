@@ -145,7 +145,6 @@ public class BroadcastModule {
                 
                 // Non-blocking write
                 int bytesWritten = 0;
-                int totalBytes = buffer.remaining();
                 
                 while (buffer.hasRemaining()) {
                     int written = channel.write(buffer);

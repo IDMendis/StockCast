@@ -1,1 +1,10 @@
 com\stockcast\StockCastApplication.class
+com\stockcast\service\StockPriceGenerator.class
+com\stockcast\service\SubscriptionManager.class
+com\stockcast\client\StockCastClient.class
+com\stockcast\model\StockPrice.class
+com\stockcast\config\ServerConfig.class
+com\stockcast\model\ClientInfo.class
+com\stockcast\service\BroadcastModule$BroadcastTask.class
+com\stockcast\service\ConnectionManager.class
+com\stockcast\service\BroadcastModule.class
