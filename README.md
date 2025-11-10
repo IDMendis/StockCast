@@ -99,8 +99,8 @@ StockCast demonstrates:
 ## Building the Project
 
 ```powershell
-# Navigate to project directory
-cd D:\StockCast
+# Navigate to backend project directory
+cd D:\StockCast\backend
 
 # Build the project
 mvn clean package
@@ -110,9 +110,11 @@ mvn clean package
 
 ```powershell
 # Using Maven
+cd D:\StockCast\backend
 mvn spring-boot:run
 
 # Or using JAR
+cd D:\StockCast\backend
 java -jar target/stockcast-1.0.0.jar
 ```
 
@@ -124,13 +126,16 @@ Open a new terminal/PowerShell window:
 
 ```powershell
 # Using Maven
+cd D:\StockCast\backend
 mvn exec:java -Dexec.mainClass="com.stockcast.client.StockCastClient"
 
 # Or compile and run directly
+cd D:\StockCast\backend
 mvn compile
 java -cp target/classes com.stockcast.client.StockCastClient
 
 # Connect to custom host/port
+cd D:\StockCast\backend
 java -cp target/classes com.stockcast.client.StockCastClient localhost 9090
 ```
 

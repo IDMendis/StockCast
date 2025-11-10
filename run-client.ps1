@@ -7,8 +7,12 @@ param(
 Write-Host "Connecting to StockCast Server at $host`:$port..." -ForegroundColor Green
 Write-Host ""
 
-# Compile first
-mvn compile -q
-
-# Run the client
-java -cp target/classes com.stockcast.client.StockCastClient $host $port
+# Compile and run from backend directory
+Push-Location "$PSScriptRoot\backend"
+try {
+    mvn compile -q
+    java -cp target/classes com.stockcast.client.StockCastClient $host $port
+}
+finally {
+    Pop-Location
+}
