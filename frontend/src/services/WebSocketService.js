@@ -66,7 +66,7 @@ class WebSocketService {
       this.reconnectInterval = null;
     }
     
-    if (this.ws) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.close();
       this.ws = null;
     }
