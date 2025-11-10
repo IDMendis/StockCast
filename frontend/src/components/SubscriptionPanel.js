@@ -3,6 +3,7 @@ import './SubscriptionPanel.css';
 
 function SubscriptionPanel({ availableTickers, subscriptions, onSubscribe, onUnsubscribe }) {
   const [selectedTickers, setSelectedTickers] = useState([]);
+  const [query, setQuery] = useState('');
 
   const handleTickerToggle = (ticker) => {
     setSelectedTickers(prev => 
@@ -22,16 +23,29 @@ function SubscriptionPanel({ availableTickers, subscriptions, onSubscribe, onUns
   const unsubscribedTickers = availableTickers.filter(
     ticker => !subscriptions.includes(ticker)
   );
+  const filtered = unsubscribedTickers.filter(t => t.toLowerCase().includes(query.toLowerCase()));
+
+  const hasSelection = selectedTickers.length > 0;
 
   return (
     <div className="subscription-panel">
       <h2>Available Stocks</h2>
+
+      <div className="search-row">
+        <input
+          type="text"
+          placeholder="Search tickers..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label="Search tickers"
+        />
+      </div>
       
       <div className="ticker-list">
-        {unsubscribedTickers.length === 0 ? (
-          <p className="no-tickers">All stocks subscribed!</p>
+        {filtered.length === 0 ? (
+          <p className="no-tickers">{query ? 'No matching tickers' : 'All stocks subscribed!'}</p>
         ) : (
-          unsubscribedTickers.map(ticker => (
+          filtered.map(ticker => (
             <label key={ticker} className="ticker-checkbox">
               <input
                 type="checkbox"
@@ -44,11 +58,14 @@ function SubscriptionPanel({ availableTickers, subscriptions, onSubscribe, onUns
         )}
       </div>
 
-      {selectedTickers.length > 0 && (
-        <button className="subscribe-btn" onClick={handleSubscribe}>
-          Subscribe to {selectedTickers.length} stock{selectedTickers.length > 1 ? 's' : ''}
-        </button>
-      )}
+      <button
+        className="subscribe-btn"
+        onClick={handleSubscribe}
+        disabled={!hasSelection}
+        title={hasSelection ? '' : 'Select one or more tickers'}
+      >
+        {hasSelection ? `Subscribe to ${selectedTickers.length} stock${selectedTickers.length > 1 ? 's' : ''}` : 'Subscribe'}
+      </button>
 
       {subscriptions.length > 0 && (
         <div className="subscribed-section">
@@ -57,7 +74,7 @@ function SubscriptionPanel({ availableTickers, subscriptions, onSubscribe, onUns
             {subscriptions.map(ticker => (
               <div key={ticker} className="subscribed-item">
                 <span>{ticker}</span>
-                <button onClick={() => onUnsubscribe(ticker)}>✕</button>
+                <button onClick={() => onUnsubscribe(ticker)} aria-label={`Unsubscribe ${ticker}`}>✕</button>
               </div>
             ))}
           </div>

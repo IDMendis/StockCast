@@ -68,12 +68,21 @@
 }
 
 .stock-price {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 8px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 12px;
   transition: color 0.2s ease;
-  font-variant-numeric: tabular-nums;
+}
+
+/* Price flash on update */
+.stock-price.flash-up {
+  color: #10b981;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+.stock-price.flash-down {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
 
 .stock-change {
@@ -93,6 +102,22 @@
 .neutral .stock-change { color: #374151; }
 
 .change-icon { font-size: 0.9rem; }
+
+/* Sparkline */
+.sparkline {
+  margin-top: 12px;
+}
+.sparkline svg {
+  width: 100%;
+  height: 40px;
+}
+.sparkline-path {
+  fill: none;
+  stroke-width: 2;
+}
+.sparkline-path.positive { stroke: #10b981; }
+.sparkline-path.negative { stroke: #ef4444; }
+.sparkline-path.neutral { stroke: #6b7280; }
 
 .stock-pulse {
   position: absolute;

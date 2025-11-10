@@ -11,6 +11,7 @@ function App() {
   const [availableTickers, setAvailableTickers] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [stockPrices, setStockPrices] = useState({});
+  const [priceHistory, setPriceHistory] = useState({}); // ticker -> [prices]
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -25,9 +26,10 @@ function App() {
           setClientId(data.clientId);
           setAvailableTickers(data.availableTickers || []);
           
-          // Initialize current prices
+          // Initialize current prices and history
           if (data.currentPrices) {
             const prices = {};
+            const histories = {};
             Object.entries(data.currentPrices).forEach(([ticker, price]) => {
               prices[ticker] = {
                 ticker,
@@ -35,8 +37,10 @@ function App() {
                 changePercent: 0,
                 timestamp: new Date().toISOString()
               };
+              histories[ticker] = [Number(price)];
             });
             setStockPrices(prices);
+            setPriceHistory(histories);
           }
           setMessage('Connected to StockCast server!');
           break;
@@ -51,6 +55,11 @@ function App() {
               timestamp: data.timestamp
             }
           }));
+          setPriceHistory(prev => {
+            const prevArr = prev[data.ticker] || [];
+            const nextArr = [...prevArr.slice(-29), Number(data.price)]; // keep last 30
+            return { ...prev, [data.ticker]: nextArr };
+          });
           break;
 
         case 'ACK':
@@ -141,6 +150,7 @@ function App() {
                 key={ticker}
                 ticker={ticker}
                 data={stockPrices[ticker]}
+                history={priceHistory[ticker] || []}
                 onUnsubscribe={handleUnsubscribe}
               />
             ))
