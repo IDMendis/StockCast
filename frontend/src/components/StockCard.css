@@ -1,53 +1,61 @@
 .stock-card {
-  background: white;
+  background: #ffffff;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  padding: 20px 20px 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .stock-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.1);
 }
 
-.stock-card.positive {
-  border-left: 4px solid #10b981;
+/* Accent bar at top */
+.stock-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #6b7280;
 }
-
-.stock-card.negative {
-  border-left: 4px solid #ef4444;
-}
-
-.stock-card.neutral {
-  border-left: 4px solid #6b7280;
-}
+.stock-card.positive::before { background: #10b981; }
+.stock-card.negative::before { background: #ef4444; }
+.stock-card.neutral::before { background: #6b7280; }
 
 .stock-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .stock-header h3 {
-  font-size: 1.5rem;
-  color: #1f2937;
+  font-size: 0.95rem;
+  color: #111827;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 9999px;
 }
 
 .close-btn {
   background: #f3f4f6;
-  border: none;
+  border: 1px solid #e5e7eb;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   color: #6b7280;
-  transition: all 0.2s;
+  transition: all 0.15s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,6 +64,7 @@
 .close-btn:hover {
   background: #ef4444;
   color: white;
+  border-color: #ef4444;
 }
 
 .stock-price {
@@ -77,28 +86,22 @@
 }
 
 .stock-change {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
 }
 
-.positive .stock-change {
-  color: #10b981;
-}
+.positive .stock-change { color: #047857; background: #ecfdf5; border-color: #d1fae5; }
+.negative .stock-change { color: #b91c1c; background: #fef2f2; border-color: #fee2e2; }
+.neutral .stock-change { color: #374151; }
 
-.negative .stock-change {
-  color: #ef4444;
-}
-
-.neutral .stock-change {
-  color: #6b7280;
-}
-
-.change-icon {
-  font-size: 0.9rem;
-}
+.change-icon { font-size: 0.9rem; }
 
 /* Sparkline */
 .sparkline {
@@ -128,30 +131,13 @@
   animation: pulse 2s infinite;
 }
 
-.stock-card.negative .stock-pulse {
-  background: #ef4444;
-}
-
-.stock-card.neutral .stock-pulse {
-  background: #6b7280;
-}
+.stock-card.negative .stock-pulse { background: #ef4444; }
+.stock-card.neutral .stock-pulse { background: #6b7280; }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.2);
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
 }
 
-.stock-card.loading {
-  opacity: 0.6;
-}
-
-.stock-card.loading p {
-  color: #6b7280;
-  font-style: italic;
-}
+.stock-card.loading { opacity: 0.6; }
+.stock-card.loading p { color: #6b7280; font-style: italic; }
