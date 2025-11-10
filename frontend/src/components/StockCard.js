@@ -2,6 +2,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import './StockCard.css';
 
 function StockCard({ ticker, data, history = [], onUnsubscribe }) {
+  // ✅ Move all hooks to the top — must run every render
+  const prevPriceRef = useRef(null);
+  const [flash, setFlash] = useState(''); // 'up' | 'down' | ''
+
+  useEffect(() => {
+    const prev = prevPriceRef.current;
+    if (typeof prev === 'number' && typeof data?.price === 'number') {
+      if (data.price > prev) setFlash('up');
+      else if (data.price < prev) setFlash('down');
+      const t = setTimeout(() => setFlash(''), 600);
+      return () => clearTimeout(t);
+    }
+    prevPriceRef.current = data?.price;
+  }, [data?.price]);
+
+  useEffect(() => {
+    prevPriceRef.current = data?.price;
+  }, [data?.price]);
+
+  // 🩶 If no data, show loading
   if (!data) {
     return (
       <div className="stock-card loading">
@@ -14,21 +34,6 @@ function StockCard({ ticker, data, history = [], onUnsubscribe }) {
   const { price, changePercent } = data;
   const isPositive = changePercent > 0;
   const isNegative = changePercent < 0;
-
-  // Flash price color briefly on updates
-  const prevPriceRef = useRef(null);
-  const [flash, setFlash] = useState(''); // 'up' | 'down' | ''
-  useEffect(() => {
-    const prev = prevPriceRef.current;
-    if (typeof prev === 'number' && typeof price === 'number') {
-      if (price > prev) setFlash('up');
-      else if (price < prev) setFlash('down');
-      const t = setTimeout(() => setFlash(''), 600);
-      return () => clearTimeout(t);
-    }
-    prevPriceRef.current = price;
-  }, [price]);
-  useEffect(() => { prevPriceRef.current = price; }, [price]);
 
   // Build a simple sparkline path from history
   const sparkPoints = history.map(Number).filter(n => !Number.isNaN(n));
