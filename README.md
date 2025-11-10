@@ -11,6 +11,17 @@ StockCast demonstrates:
 - **Multi-client support** with thread-safe operations
 - **Non-blocking I/O** for scalable communication
 
+## 📚 Learning Focus: Network Concepts
+
+This project is designed to teach fundamental **networking principles**:
+- **TCP/IP Socket Programming**: Client-server communication using sockets
+- **Non-Blocking I/O (NIO)**: Single-threaded server handling thousands of clients
+- **Protocol Design**: Custom text-based protocol with message framing
+- **Multithreading & Concurrency**: Thread-safe data structures and synchronization
+- **Scalability Patterns**: How NIO enables horizontal scaling
+
+👉 **For detailed network concepts and learning objectives, see [NETWORK_CONCEPTS.md](NETWORK_CONCEPTS.md)**
+
 ## Team Member Contributions
 
 ### Member 1: Server Setup & Connection Handling
