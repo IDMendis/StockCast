@@ -12,13 +12,13 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Member 5: Client Interface & Update Display
- * Console application to subscribe, receive updates, and display stock prices in real-time
+ * Console application to subscribe, receive updates, and display stock prices
+ * in real-time
  */
 public class StockCastClient {
-    
-    private static final DateTimeFormatter TIME_FORMAT = 
-        DateTimeFormatter.ofPattern("HH:mm:ss");
-    
+
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
+
     private SocketChannel socketChannel;
     private volatile boolean running = false;
     private String clientId;
@@ -26,7 +26,7 @@ public class StockCastClient {
 
     public static void main(String[] args) {
         String host = args.length > 0 ? args[0] : "localhost";
-        int port = args.length > 1 ? Integer.parseInt(args[1]) : 9090;
+        int port = args.length > 1 ? Integer.parseInt(args[1]) : 9092;
 
         StockCastClient client = new StockCastClient();
         try {
@@ -43,20 +43,20 @@ public class StockCastClient {
         socketChannel = SocketChannel.open();
         socketChannel.connect(new InetSocketAddress(host, port));
         socketChannel.configureBlocking(false);
-        
+
         running = true;
-        
+
         // Start receiver thread
         receiverThread = new Thread(this::receiveMessages, "MessageReceiver");
         receiverThread.start();
-        
+
         System.out.println("Connected to StockCast server at " + host + ":" + port);
         System.out.println("=".repeat(70));
     }
 
     public void disconnect() {
         running = false;
-        
+
         if (receiverThread != null) {
             receiverThread.interrupt();
             try {
@@ -65,7 +65,7 @@ public class StockCastClient {
                 Thread.currentThread().interrupt();
             }
         }
-        
+
         if (socketChannel != null && socketChannel.isOpen()) {
             try {
                 socketChannel.close();
@@ -73,31 +73,30 @@ public class StockCastClient {
                 System.err.println("Error closing connection: " + e.getMessage());
             }
         }
-        
+
         System.out.println("\nDisconnected from server");
     }
 
     public void run() throws IOException {
         printHelp();
-        
+
         BufferedReader consoleReader = new BufferedReader(
-            new InputStreamReader(System.in)
-        );
+                new InputStreamReader(System.in));
 
         while (running) {
             try {
                 // Check if user has input (non-blocking)
                 if (consoleReader.ready()) {
                     String input = consoleReader.readLine();
-                    
-                    if (input == null || input.equalsIgnoreCase("quit") || 
-                        input.equalsIgnoreCase("exit")) {
+
+                    if (input == null || input.equalsIgnoreCase("quit") ||
+                            input.equalsIgnoreCase("exit")) {
                         break;
                     }
-                    
+
                     processUserInput(input.trim());
                 }
-                
+
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -210,8 +209,8 @@ public class StockCastClient {
             String changeDisplay = formatPriceChange(change);
             String time = LocalDateTime.now().format(TIME_FORMAT);
 
-            System.out.printf("[%s] %-6s $%-10s %s%n", 
-                time, ticker, price, changeDisplay);
+            System.out.printf("[%s] %-6s $%-10s %s%n",
+                    time, ticker, price, changeDisplay);
         }
     }
 
@@ -281,9 +280,8 @@ public class StockCastClient {
 
     private void sendMessage(String message) throws IOException {
         ByteBuffer buffer = ByteBuffer.wrap(
-            (message + "\n").getBytes(StandardCharsets.UTF_8)
-        );
-        
+                (message + "\n").getBytes(StandardCharsets.UTF_8));
+
         while (buffer.hasRemaining()) {
             socketChannel.write(buffer);
         }

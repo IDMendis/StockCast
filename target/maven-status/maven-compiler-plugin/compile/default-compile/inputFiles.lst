@@ -1,6 +1,9 @@
 D:\StockCast\src\main\java\com\stockcast\model\ClientInfo.java
+D:\StockCast\src\main\java\com\stockcast\websocket\StockWebSocketHandler.java
 D:\StockCast\src\main\java\com\stockcast\service\ConnectionManager.java
 D:\StockCast\src\main\java\com\stockcast\config\ServerConfig.java
+D:\StockCast\src\main\java\com\stockcast\service\WebSocketSubscriptionManager.java
+D:\StockCast\src\main\java\com\stockcast\config\WebSocketConfig.java
 D:\StockCast\src\main\java\com\stockcast\service\BroadcastModule.java
 D:\StockCast\src\main\java\com\stockcast\model\StockPrice.java
 D:\StockCast\src\main\java\com\stockcast\service\StockPriceGenerator.java

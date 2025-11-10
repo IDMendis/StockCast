@@ -32,7 +32,9 @@ public class ConnectionManager {
     private final BroadcastModule broadcastModule;
     private final StockPriceGenerator stockPriceGenerator;
 
-    @Value("${server.port:9090}")
+    // Use a dedicated property for the TCP server port so we don't collide
+    // with the embedded HTTP server (Tomcat) which also uses `server.port`.
+    @Value("${stockcast.server.port:9092}")
     private int port;
 
     private ServerSocketChannel serverSocketChannel;
@@ -116,7 +118,7 @@ public class ConnectionManager {
         while (running && !Thread.currentThread().isInterrupted()) {
             try {
                 SocketChannel clientChannel = serverSocketChannel.accept();
-                
+
                 if (clientChannel != null) {
                     String clientId = UUID.randomUUID().toString().substring(0, 8);
                     log.info("New client connected: {}", clientId);
@@ -131,8 +133,8 @@ public class ConnectionManager {
                     broadcastModule.registerChannel(clientChannel);
 
                     // Send welcome message
-                    String welcome = "WELCOME|" + clientId + "|Available tickers: " + 
-                        String.join(",", stockPriceGenerator.getAvailableTickers()) + "\n";
+                    String welcome = "WELCOME|" + clientId + "|Available tickers: " +
+                            String.join(",", stockPriceGenerator.getAvailableTickers()) + "\n";
                     sendMessage(clientChannel, welcome);
 
                     // Handle client in separate thread
@@ -217,11 +219,11 @@ public class ConnectionManager {
                     if (parts.length > 1) {
                         String[] tickers = parts[1].split(",");
                         subscriptionManager.subscribe(clientId, tickers);
-                        
+
                         ClientInfo client = subscriptionManager.getClient(clientId);
                         if (client != null) {
-                            broadcastModule.sendToClient(client, 
-                                "ACK|Subscribed to: " + String.join(",", tickers));
+                            broadcastModule.sendToClient(client,
+                                    "ACK|Subscribed to: " + String.join(",", tickers));
                         }
                     }
                     break;
@@ -230,11 +232,11 @@ public class ConnectionManager {
                     if (parts.length > 1) {
                         String[] tickers = parts[1].split(",");
                         subscriptionManager.unsubscribe(clientId, tickers);
-                        
+
                         ClientInfo client = subscriptionManager.getClient(clientId);
                         if (client != null) {
-                            broadcastModule.sendToClient(client, 
-                                "ACK|Unsubscribed from: " + String.join(",", tickers));
+                            broadcastModule.sendToClient(client,
+                                    "ACK|Unsubscribed from: " + String.join(",", tickers));
                         }
                     }
                     break;
@@ -243,8 +245,8 @@ public class ConnectionManager {
                     ClientInfo client = subscriptionManager.getClient(clientId);
                     if (client != null) {
                         String subs = String.join(",", client.getSubscriptions());
-                        broadcastModule.sendToClient(client, 
-                            "SUBSCRIPTIONS|" + (subs.isEmpty() ? "None" : subs));
+                        broadcastModule.sendToClient(client,
+                                "SUBSCRIPTIONS|" + (subs.isEmpty() ? "None" : subs));
                     }
                     break;
 
@@ -291,7 +293,7 @@ public class ConnectionManager {
     private void onStockPriceUpdate(StockPrice stockPrice) {
         // Get all clients subscribed to this ticker
         var subscribers = subscriptionManager.getSubscribersForTicker(stockPrice.getTicker());
-        
+
         if (!subscribers.isEmpty()) {
             // Broadcast to subscribed clients
             broadcastModule.broadcast(stockPrice, subscribers);

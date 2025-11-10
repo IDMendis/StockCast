@@ -14,7 +14,7 @@ Interactive web interface for the StockCast real-time stock price broadcasting s
 ## Prerequisites
 
 - Node.js 14+ and npm
-- StockCast backend server running on port 9090
+- StockCast backend server running on port 9091
 
 ## Installation
 
@@ -25,21 +25,29 @@ npm install
 
 ## Running the App
 
+Start the React frontend (it will open at http://localhost:3000):
+
 ```powershell
 npm start
 ```
 
-The app will open at `http://localhost:3000` and connect to the backend at `ws://localhost:9090/ws/stock`.
+By default the frontend connects to the backend WebSocket at:
+
+```
+ws://localhost:9091/ws/stock
+```
 
 ## Usage
 
 1. **Start the backend server first**:
+
    ```powershell
    cd D:\StockCast
    mvn spring-boot:run
    ```
 
 2. **Start the React frontend**:
+
    ```powershell
    cd D:\StockCast\frontend
    npm start
@@ -81,6 +89,7 @@ frontend/
 The frontend communicates with the backend using JSON messages:
 
 ### Client → Server
+
 ```json
 {
   "command": "SUBSCRIBE",
@@ -89,6 +98,7 @@ The frontend communicates with the backend using JSON messages:
 ```
 
 ### Server → Client
+
 ```json
 {
   "type": "PRICE",
@@ -128,15 +138,18 @@ connect(url = 'ws://your-server:port/ws/stock') {
 ## Troubleshooting
 
 **"WebSocket disconnected"**
+
 - Ensure backend server is running
 - Check backend URL in WebSocketService.js
 - Verify firewall allows WebSocket connections
 
-**"Cannot connect to server"**
-- Make sure backend is running on port 9090
+- **"Cannot connect to server"**
+
+- Make sure backend is running on port 9091
 - Check console for detailed error messages
 
 **Prices not updating**
+
 - Ensure you've subscribed to stocks
 - Check browser console for WebSocket messages
 - Verify backend is generating prices

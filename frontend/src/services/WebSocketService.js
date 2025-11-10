@@ -11,7 +11,7 @@ class WebSocketService {
     this.reconnectDelay = 3000;
   }
 
-  connect(url = 'ws://localhost:9090/ws/stock') {
+  connect(url = 'ws://localhost:9091/ws/stock') {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       console.log('WebSocket already connected');
       return;
