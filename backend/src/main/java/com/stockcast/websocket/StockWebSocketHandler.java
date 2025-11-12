@@ -107,6 +107,11 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
         if (tickers != null && !tickers.isEmpty()) {
             subscriptionManager.subscribe(session.getId(), tickers.toArray(new String[0]));
 
+            // Record subscription metrics
+            for (String ticker : tickers) {
+                metricsService.recordSubscription(ticker);
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("type", "ACK");
             response.put("message", "Subscribed to: " + String.join(", ", tickers));
@@ -120,6 +125,11 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
 
         if (tickers != null && !tickers.isEmpty()) {
             subscriptionManager.unsubscribe(session.getId(), tickers.toArray(new String[0]));
+            
+            // Record unsubscription metrics
+            for (String ticker : tickers) {
+                metricsService.recordUnsubscription(ticker);
+            }
 
             Map<String, Object> response = new HashMap<>();
             response.put("type", "ACK");
