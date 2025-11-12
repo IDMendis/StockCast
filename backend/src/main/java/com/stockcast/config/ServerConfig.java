@@ -31,17 +31,17 @@ public class ServerConfig {
         try {
             // Start TCP/WebSocket server
             connectionManager.start();
-            
+
             // Start UDP multicast broadcaster
             udpBroadcaster.start();
-            
+
             log.info("=".repeat(70));
             log.info("StockCast Server is ready to accept connections");
             log.info("Available stock tickers: AAPL, GOOG, MSFT, AMZN, TSLA");
             log.info("TCP Server: {}", connectionManager.isRunning() ? "Running" : "Stopped");
-            log.info("UDP Multicast: {}:{}", 
-                udpBroadcaster.getMulticastAddress(), 
-                udpBroadcaster.getMulticastPort());
+            log.info("UDP Multicast: {}:{}",
+                    udpBroadcaster.getMulticastAddress(),
+                    udpBroadcaster.getMulticastPort());
             log.info("Metrics API: http://localhost:9091/api/metrics");
             log.info("=".repeat(70));
         } catch (IOException e) {
@@ -55,7 +55,11 @@ public class ServerConfig {
      */
     @Scheduled(fixedRate = 60000, initialDelay = 60000)
     public void printMetrics() {
-        metricsService.printMetricsSummary();
+        try {
+            metricsService.printMetricsSummary();
+        } catch (Exception e) {
+            log.error("Error printing metrics summary", e);
+        }
     }
 
     /**
@@ -64,9 +68,8 @@ public class ServerConfig {
     @Scheduled(fixedRate = 300000, initialDelay = 10000) // Every 5 minutes
     public void sendPeriodicAnnouncements() {
         udpBroadcaster.broadcastMarketSummary(
-            String.format("Active clients: %d | Total subscriptions: %d",
-                metricsService.getTotalActiveClients(),
-                metricsService.getTotalSubscriptions())
-        );
+                String.format("Active clients: %d | Total subscriptions: %d",
+                        metricsService.getTotalActiveClients(),
+                        metricsService.getTotalSubscriptions()));
     }
 }
