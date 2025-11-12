@@ -20,10 +20,10 @@ import java.util.function.Consumer;
 @Service
 @Slf4j
 public class StockPriceGenerator {
-    
-    @Value("${stockcast.price.update.interval:1000}")
+
+    @Value("${stockcast.price.update.interval:5000}")
     private long updateInterval;
-    
+
     private final Map<String, Double> currentPrices = new ConcurrentHashMap<>();
     private final Map<String, Double> previousPrices = new ConcurrentHashMap<>();
     private final List<Consumer<StockPrice>> listeners = new CopyOnWriteArrayList<>();
@@ -39,7 +39,7 @@ public class StockPriceGenerator {
         currentPrices.put("MSFT", 380.0);
         currentPrices.put("AMZN", 3400.0);
         currentPrices.put("TSLA", 250.0);
-        
+
         previousPrices.putAll(currentPrices);
     }
 
@@ -48,7 +48,7 @@ public class StockPriceGenerator {
             log.warn("Stock price generator is already running");
             return;
         }
-        
+
         running = true;
         generatorThread = new Thread(this::generatePrices, "StockPriceGenerator");
         generatorThread.setDaemon(true);
@@ -76,30 +76,29 @@ public class StockPriceGenerator {
                 for (Map.Entry<String, Double> entry : currentPrices.entrySet()) {
                     String ticker = entry.getKey();
                     double currentPrice = entry.getValue();
-                    
+
                     // Generate random price change between -2% and +2%
                     double changePercent = (random.nextDouble() * 4.0) - 2.0;
                     double newPrice = currentPrice * (1 + changePercent / 100.0);
-                    
+
                     // Ensure price stays positive and reasonable
                     newPrice = Math.max(newPrice, currentPrice * 0.5);
                     newPrice = Math.min(newPrice, currentPrice * 1.5);
-                    
+
                     previousPrices.put(ticker, currentPrice);
                     currentPrices.put(ticker, newPrice);
-                    
+
                     // Create stock price update
                     StockPrice stockPrice = new StockPrice(
-                        ticker,
-                        newPrice,
-                        LocalDateTime.now(),
-                        changePercent
-                    );
-                    
+                            ticker,
+                            newPrice,
+                            LocalDateTime.now(),
+                            changePercent);
+
                     // Notify all listeners
                     notifyListeners(stockPrice);
                 }
-                
+
                 Thread.sleep(updateInterval);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

@@ -23,8 +23,7 @@ class WebSocketService {
     this.ws.onopen = () => {
       console.log('WebSocket connected');
       this.listeners.onConnect.forEach(cb => cb());
-      
-      // Clear reconnect interval if exists
+
       if (this.reconnectInterval) {
         clearInterval(this.reconnectInterval);
         this.reconnectInterval = null;
@@ -44,8 +43,7 @@ class WebSocketService {
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
       this.listeners.onDisconnect.forEach(cb => cb());
-      
-      // Auto reconnect
+
       if (!this.reconnectInterval) {
         this.reconnectInterval = setInterval(() => {
           console.log('Attempting to reconnect...');
@@ -65,20 +63,21 @@ class WebSocketService {
       clearInterval(this.reconnectInterval);
       this.reconnectInterval = null;
     }
-    
+
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.close();
       this.ws = null;
     }
   }
 
-  send(command, data = {}) {
+  // ✅ New universal send method
+  send(command, payload = {}) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const message = { command, ...data };
+      const message = JSON.stringify({ command, ...payload });
       console.log('Sending:', message);
-      this.ws.send(JSON.stringify(message));
+      this.ws.send(message);
     } else {
-      console.error('WebSocket not connected');
+      console.warn('WebSocket not connected. Cannot send:', command);
     }
   }
 
@@ -116,5 +115,4 @@ class WebSocketService {
 }
 
 const webSocketService = new WebSocketService();
-
 export default webSocketService;

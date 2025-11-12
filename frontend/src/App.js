@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import WebSocketService from './services/WebSocketService';
 import StockCard from './components/StockCard';
 import SubscriptionPanel from './components/SubscriptionPanel';
 import ConnectionStatus from './components/ConnectionStatus';
+import MetricsPanel from './components/MetricsPanel';
+
 
 function App() {
   const [connected, setConnected] = useState(false);
@@ -14,19 +17,16 @@ function App() {
   const [priceHistory, setPriceHistory] = useState({}); // ticker -> [prices]
   const [message, setMessage] = useState('');
 
+
   useEffect(() => {
-    // Connect to WebSocket
     WebSocketService.connect();
 
-    // Set up message handler
     const handleMessage = (data) => {
       switch (data.type) {
         case 'WELCOME':
           setConnected(true);
           setClientId(data.clientId);
           setAvailableTickers(data.availableTickers || []);
-          
-          // Initialize current prices and history
           if (data.currentPrices) {
             const prices = {};
             const histories = {};
@@ -44,7 +44,6 @@ function App() {
           }
           setMessage('Connected to StockCast server!');
           break;
-
         case 'PRICE':
           setStockPrices(prev => ({
             ...prev,
@@ -57,25 +56,21 @@ function App() {
           }));
           setPriceHistory(prev => {
             const prevArr = prev[data.ticker] || [];
-            const nextArr = [...prevArr.slice(-29), Number(data.price)]; // keep last 30
+            const nextArr = [...prevArr.slice(-29), Number(data.price)];
             return { ...prev, [data.ticker]: nextArr };
           });
           break;
-
         case 'ACK':
           setMessage(data.message);
           setTimeout(() => setMessage(''), 3000);
           break;
-
         case 'SUBSCRIPTIONS':
           setSubscriptions(data.subscriptions || []);
           break;
-
         case 'ERROR':
           setMessage('Error: ' + data.message);
           setTimeout(() => setMessage(''), 5000);
           break;
-
         default:
           console.log('Unknown message type:', data.type);
       }
@@ -95,7 +90,6 @@ function App() {
     WebSocketService.on('onConnect', handleConnect);
     WebSocketService.on('onDisconnect', handleDisconnect);
 
-    // Cleanup
     return () => {
       WebSocketService.off('onMessage', handleMessage);
       WebSocketService.off('onConnect', handleConnect);
@@ -103,6 +97,7 @@ function App() {
       WebSocketService.disconnect();
     };
   }, []);
+
 
   const handleSubscribe = (tickers) => {
     if (tickers && tickers.length > 0) {
@@ -115,6 +110,7 @@ function App() {
     WebSocketService.unsubscribe([ticker]);
     setSubscriptions(prev => prev.filter(t => t !== ticker));
   };
+
 
   return (
     <div className="App">
@@ -129,6 +125,8 @@ function App() {
           {message}
         </div>
       )}
+
+      <MetricsPanel />
 
       <div className="app-container">
         <SubscriptionPanel

@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+
 public class ConnectionManager {
 
     private final SubscriptionManager subscriptionManager;
