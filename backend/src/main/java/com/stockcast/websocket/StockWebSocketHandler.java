@@ -2,6 +2,7 @@ package com.stockcast.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockcast.model.StockPrice;
+import com.stockcast.service.MetricsService;
 import com.stockcast.service.StockPriceGenerator;
 import com.stockcast.service.WebSocketSubscriptionManager;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
 
     private final WebSocketSubscriptionManager subscriptionManager;
     private final StockPriceGenerator stockPriceGenerator;
+    private final MetricsService metricsService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
@@ -40,14 +42,15 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("WebSocket client connected: {}", session.getId());
         subscriptionManager.registerSession(session);
-        
+        metricsService.incrementWebSocketClients();
+
         // Send welcome message
         Map<String, Object> welcome = new HashMap<>();
         welcome.put("type", "WELCOME");
         welcome.put("clientId", session.getId());
         welcome.put("availableTickers", stockPriceGenerator.getAvailableTickers());
         welcome.put("currentPrices", stockPriceGenerator.getCurrentPrices());
-        
+
         sendMessage(session, welcome);
     }
 
@@ -87,21 +90,23 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.info("WebSocket client disconnected: {}", session.getId());
         subscriptionManager.unregisterSession(session.getId());
+        metricsService.decrementWebSocketClients();
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         log.error("WebSocket error for session {}", session.getId(), exception);
         subscriptionManager.unregisterSession(session.getId());
+        metricsService.decrementWebSocketClients();
     }
 
     private void handleSubscribe(WebSocketSession session, Map<String, Object> msg) throws IOException {
         @SuppressWarnings("unchecked")
         java.util.List<String> tickers = (java.util.List<String>) msg.get("tickers");
-        
+
         if (tickers != null && !tickers.isEmpty()) {
             subscriptionManager.subscribe(session.getId(), tickers.toArray(new String[0]));
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("type", "ACK");
             response.put("message", "Subscribed to: " + String.join(", ", tickers));
@@ -112,10 +117,10 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
     private void handleUnsubscribe(WebSocketSession session, Map<String, Object> msg) throws IOException {
         @SuppressWarnings("unchecked")
         java.util.List<String> tickers = (java.util.List<String>) msg.get("tickers");
-        
+
         if (tickers != null && !tickers.isEmpty()) {
             subscriptionManager.unsubscribe(session.getId(), tickers.toArray(new String[0]));
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("type", "ACK");
             response.put("message", "Unsubscribed from: " + String.join(", ", tickers));
@@ -125,7 +130,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
 
     private void handleList(WebSocketSession session) throws IOException {
         var subscriptions = subscriptionManager.getSubscriptions(session.getId());
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("type", "SUBSCRIPTIONS");
         response.put("subscriptions", subscriptions);
@@ -140,14 +145,14 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
 
     private void broadcastStockPrice(StockPrice stockPrice) {
         var subscribers = subscriptionManager.getSubscribersForTicker(stockPrice.getTicker());
-        
+
         Map<String, Object> priceMsg = new HashMap<>();
         priceMsg.put("type", "PRICE");
         priceMsg.put("ticker", stockPrice.getTicker());
         priceMsg.put("price", stockPrice.getPrice());
         priceMsg.put("timestamp", stockPrice.getTimestamp().toString());
         priceMsg.put("changePercent", stockPrice.getChangePercent());
-        
+
         for (WebSocketSession session : subscribers) {
             try {
                 sendMessage(session, priceMsg);
