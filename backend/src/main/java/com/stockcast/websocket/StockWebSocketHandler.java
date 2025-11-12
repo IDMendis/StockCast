@@ -125,7 +125,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
 
         if (tickers != null && !tickers.isEmpty()) {
             subscriptionManager.unsubscribe(session.getId(), tickers.toArray(new String[0]));
-            
+
             // Record unsubscription metrics
             for (String ticker : tickers) {
                 metricsService.recordUnsubscription(ticker);
@@ -176,6 +176,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
         if (session.isOpen()) {
             String json = objectMapper.writeValueAsString(message);
             session.sendMessage(new TextMessage(json));
+            metricsService.recordMessageSent(json.length());
         }
     }
 
