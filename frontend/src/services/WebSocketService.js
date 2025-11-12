@@ -72,16 +72,19 @@ class WebSocketService {
     }
   }
 
-  send(command, data = {}) {
+
+  // Send a raw protocol string (for token-based protocol)
+  sendRaw(str) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const message = { command, ...data };
-      console.log('Sending:', message);
-      this.ws.send(JSON.stringify(message));
+      console.log('Sending:', str);
+      this.ws.send(str + '\n');
     } else {
       console.error('WebSocket not connected');
     }
   }
 
+
+  // Deprecated: use sendRaw for new protocol
   subscribe(tickers) {
     this.send('SUBSCRIBE', { tickers });
   }
