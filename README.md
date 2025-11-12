@@ -1,283 +1,194 @@
 # StockCast - Real-Time Stock Price Broadcasting System
 
-A Spring Boot-based server-client system that simulates a stock market by generating mock stock prices and broadcasting them to subscribed clients in real-time using Java NIO.
+**StockCast** is a real-time stock market simulation system that sends continuously updated stock prices to multiple clients at once. It combines several networking technologies — **TCP, UDP Multicast, WebSocket, and REST APIs** — to show how data can move across different network layers efficiently.
+
+---
 
 ## System Overview
 
-StockCast demonstrates:
-- **Real-time stock price generation** with continuous updates
-- **Client subscription management** per stock ticker
-- **Efficient broadcasting** using Java NIO (SocketChannel + Selector)
-- **Multi-client support** with thread-safe operations
-- **Non-blocking I/O** for scalable communication
+StockCast is built with **Java and Spring Boot** to demonstrate how real-time communication works between servers and multiple clients.
 
-## Team Member Contributions
+The system includes:
 
-### Member 1: Server Setup & Connection Handling
-**File:** `ConnectionManager.java`
-- Implements ServerSocket to accept multiple client connections
-- Manages client connections and lifecycle
-- Handles client message processing (SUBSCRIBE, UNSUBSCRIBE, LIST, PING)
-- Thread pool for handling multiple clients concurrently
+- A **server** that generates and broadcasts stock prices.
+- Different **communication modules** (TCP, UDP, WebSocket).
+- A **client interface** to receive updates.
+- A **dashboard** to monitor performance and metrics.
 
-### Member 2: Stock Price Simulation Module
-**File:** `StockPriceGenerator.java`
-- Continuously generates mock stock price updates in a separate thread
-- Simulates realistic price changes (-2% to +2% per update)
-- Notifies listeners when prices update
-- Default tickers: AAPL, GOOG, MSFT, AMZN, TSLA
+### Key Features
 
-### Member 3: Client Subscription Management
-**File:** `SubscriptionManager.java`
-- Tracks which clients subscribe to which stock tickers
-- Uses thread-safe collections (ConcurrentHashMap)
-- Manages registration/unregistration of clients
-- Provides efficient lookup of subscribers per ticker
+- Real-time stock price generation and broadcasting.
+- Multiple clients can connect using TCP or WebSocket.
+- UDP multicast allows one-to-many message delivery.
+- REST API for system monitoring.
+- Uses threads for handling multiple clients efficiently.
+- Live performance tracking with metrics display.
 
-### Member 4: Efficient Broadcasting & NIO
+---
+
+## Networking Concepts Used
+
+### 🧩 1. TCP/IP Socket Programming
+
+**Files:** `ConnectionManager.java`, `StockCastClient.java`
+
+- Creates a **reliable connection** between the server and clients using TCP.
+- Handles sending and receiving stock updates in real-time.
+- Manages the full connection process: connect → send/receive → close.
+- Runs on **port 9092** for TCP communication.
+
+---
+
+### 📬 2. UDP Multicast
+
+**Files:** `UDPMulticastBroadcaster.java`, `UDPMulticastListener.java`
+
+- Sends messages to **multiple clients at once** without a direct connection.
+- Uses **multicast groups** (`230.0.0.1:4446`) to broadcast data.
+- Good for fast, light updates where reliability is less critical.
+- Works with `MulticastSocket` and `DatagramPacket`.
+
+---
+
+### ⚡ 3. Java NIO (Non-Blocking I/O)
+
 **File:** `BroadcastModule.java`
-- Broadcasts price updates using Java NIO (SocketChannel + Selector)
-- Non-blocking communication for scalability
-- Queue-based broadcasting to handle multiple simultaneous updates
-- Efficient message delivery to subscribed clients only
 
-### Member 5: Client Interface & Update Display
-**File:** `StockCastClient.java`
-- Console-based client application
-- Real-time display of stock price updates
-- Interactive command interface for subscriptions
-- Visual indicators for price changes (↑↓→)
+- Allows the server to handle **many clients at the same time** without waiting.
+- Uses `Selector` and `SocketChannel` for non-blocking data transfer.
+- Improves performance by using fewer threads.
+- Stores and processes data efficiently using `ByteBuffer`.
 
-## Architecture
+---
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                  StockCast Server                        │
-├─────────────────────────────────────────────────────────┤
-│  ConnectionManager (Member 1)                            │
-│    - Accept client connections                           │
-│    - Process client commands                             │
-│                                                           │
-│  StockPriceGenerator (Member 2)                          │
-│    - Generate mock prices                                │
-│    - Notify listeners                                    │
-│                                                           │
-│  SubscriptionManager (Member 3)                          │
-│    - Track subscriptions                                 │
-│    - Thread-safe operations                              │
-│                                                           │
-│  BroadcastModule (Member 4)                              │
-│    - NIO-based broadcasting                              │
-│    - Non-blocking I/O                                    │
-└─────────────────────────────────────────────────────────┘
-                          │
-                          │ TCP/IP (Java NIO)
-                          │
-┌─────────────────────────────────────────────────────────┐
-│              StockCastClient (Member 5)                  │
-├─────────────────────────────────────────────────────────┤
-│  - Subscribe to tickers                                  │
-│  - Receive real-time updates                             │
-│  - Display prices in console                             │
-└─────────────────────────────────────────────────────────┘
-```
+### 🌐 4. WebSocket Protocol
+
+**Files:** `StockWebSocketHandler.java`, `WebSocketConfig.java`, `WebSocketService.js`
+
+- Keeps a **constant connection** between browser clients and the server.
+- Sends real-time updates using the `ws://` protocol.
+- Supports **two-way communication** — the client and server can both send messages anytime.
+- Built with **Spring WebSocket** for backend and **JavaScript WebSocket API** for frontend.
+
+---
+
+### 🔗 5. HTTP/REST API
+
+**File:** `MetricsController.java`
+
+- Exposes data through **HTTP endpoints** (like `/api/metrics`).
+- Allows viewing of performance statistics such as connection count and uptime.
+- Uses **JSON format** for communication between client and server.
+- Runs on **port 9091**.
+
+---
+
+### 🧵 6. Multi-Threading & Concurrency
+
+**Files:** `ConnectionManager.java`, `StockPriceGenerator.java`, `BroadcastModule.java`, `UDPMulticastBroadcaster.java`
+
+- Uses multiple threads to handle many users and processes at once.
+- Thread pools (`ExecutorService`) prevent blocking.
+- Thread-safe collections (`ConcurrentHashMap`) keep data safe from conflicts.
+- Ensures smooth updates without slowing down the system.
+
+---
+
+### 🖧 7. Client-Server Architecture
+
+- Follows the **publish-subscribe** model — clients subscribe to specific stock tickers.
+- The server acts as a **broadcaster**, sending updates to all subscribed clients.
+- Uses a simple command-based protocol like `SUBSCRIBE`, `LIST`, `PING`.
+
+---
+
+### 🔐 8. Application Layer Protocol
+
+**Files:** `ConnectionManager.java`, `StockWebSocketHandler.java`, `AUTHENTICATION.md`
+
+- Custom message format for sending commands and data.
+- Includes token-based authentication for secure sessions.
+- Handles errors and responses in a consistent way.
+
+---
+
+### 📈 9. Real-Time Data Streaming
+
+**Files:** `StockPriceGenerator.java`, `BroadcastModule.java`
+
+- Continuously generates stock price changes every few seconds.
+- Sends updates automatically to all active clients.
+- Supports **push-based communication** (server sends updates instantly).
+
+---
+
+### 📊 10. Performance Monitoring
+
+**Files:** `MetricsService.java`, `MetricsPanel.js`
+
+- Tracks live metrics: active connections, system load, and uptime.
+- Displays data on a **real-time dashboard**.
+- Helps visualize how the system performs during operation.
+
+---
 
 ## Technologies Used
 
-- **Spring Boot 3.2.0** - Application framework
-- **Java 17** - Programming language
-- **Java NIO** - Non-blocking I/O for efficient communication
-- **ConcurrentHashMap** - Thread-safe collections
-- **Maven** - Build tool
-- **Lombok** - Reduce boilerplate code
+- **Java 17** – Core programming language
+- **Spring Boot 3.2.0** – Backend framework
+- **Java NIO** – For non-blocking I/O
+- **WebSocket API** – Real-time browser communication
+- **UDP Multicast** – Fast group broadcasting
+- **RESTful API** – For monitoring and data access
+- **Concurrent Collections** – Thread-safe data handling
+- **Maven & Lombok** – Build management and reduced boilerplate
 
-## Prerequisites
+---
 
-- Java 17 or higher
-- Maven 3.6 or higher
+## How to Run
 
-## Building the Project
+### Run the Server
 
-```powershell
-# Navigate to backend project directory
-cd D:\StockCast\backend
-
-# Build the project
-mvn clean package
-```
-
-## Running the Server
-
-```powershell
-# Using Maven
-cd D:\StockCast\backend
+```bash
+cd backend
 mvn spring-boot:run
-
-# Or using JAR
-cd D:\StockCast\backend
-java -jar target/stockcast-1.0.0.jar
 ```
 
-The server will start on port **9090** by default.
+**Ports used:**
 
-## Running the Client
+- REST + WebSocket → 9091
+- TCP Server → 9092
+- UDP Multicast → 4446
 
-Open a new terminal/PowerShell window:
+### Run the Client
 
-```powershell
-# Using Maven
-cd D:\StockCast\backend
-mvn exec:java -Dexec.mainClass="com.stockcast.client.StockCastClient"
-
-# Or compile and run directly
-cd D:\StockCast\backend
-mvn compile
+```bash
 java -cp target/classes com.stockcast.client.StockCastClient
-
-# Connect to custom host/port
-cd D:\StockCast\backend
-java -cp target/classes com.stockcast.client.StockCastClient localhost 9090
 ```
 
-## Client Commands
+---
 
-Once connected, use these commands:
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `subscribe <tickers>` | Subscribe to stock updates | `subscribe AAPL,GOOG` |
-| `unsubscribe <tickers>` | Unsubscribe from updates | `unsubscribe AAPL` |
-| `list` | Show current subscriptions | `list` |
-| `ping` | Check server connection | `ping` |
-| `clear` | Clear the screen | `clear` |
-| `help` | Show help message | `help` |
-| `quit` | Exit the client | `quit` |
-
-## Protocol
-
-The system uses a simple text-based protocol with pipe-delimited messages:
-
-### Client → Server
-- `SUBSCRIBE|AAPL,GOOG` - Subscribe to tickers
-- `UNSUBSCRIBE|MSFT` - Unsubscribe from tickers
-- `LIST` - Get current subscriptions
-- `PING` - Ping server
-
-### Server → Client
-- `WELCOME|<clientId>|Available tickers: ...` - Welcome message
-- `PRICE|<ticker>|<price>|<timestamp>|<change%>` - Price update
-- `ACK|<message>` - Acknowledgment
-- `SUBSCRIPTIONS|<ticker1,ticker2>` - Subscription list
-- `PONG` - Ping response
-
-## Configuration
-
-Edit `src/main/resources/application.properties`:
-
-```properties
-# Server port
-server.port=9090
-
-# Price update interval (milliseconds)
-stockcast.price.update.interval=1000
-
-# Initial stock prices
-stockcast.price.initial.aapl=150.0
-stockcast.price.initial.goog=2800.0
-stockcast.price.initial.msft=380.0
-stockcast.price.initial.amzn=3400.0
-stockcast.price.initial.tsla=250.0
-```
-
-## Example Session
+## Architecture Overview
 
 ```
-Connected to StockCast server at localhost:9090
-======================================================================
-Client ID: a3f7d21e
-Available tickers: AAPL,GOOG,MSFT,AMZN,TSLA
-======================================================================
-
-Available Commands:
-  subscribe <tickers>    - Subscribe to stock updates (e.g., subscribe AAPL,GOOG)
-  unsubscribe <tickers>  - Unsubscribe from stock updates
-  list                   - Show your current subscriptions
-  ping                   - Check server connection
-  clear                  - Clear screen
-  help                   - Show this help message
-  quit                   - Exit the client
-======================================================================
-
-> subscribe AAPL,TSLA
-✓ Subscribed to: AAPL,TSLA
-
-[12:34:56] AAPL   $150.25    ↑ +0.17%
-[12:34:56] TSLA   $249.87    ↓ -0.05%
-[12:34:57] AAPL   $150.48    ↑ +0.15%
-[12:34:57] TSLA   $250.12    ↑ +0.10%
+┌───────────────────────────────────────────────┐
+│                StockCast Server               │
+├───────────────────────────────────────────────┤
+│ TCP Module (ConnectionManager)                │
+│ UDP Multicast (UDPMulticastBroadcaster)       │
+│ WebSocket (StockWebSocketHandler)             │
+│ Stock Generator (StockPriceGenerator)         │
+│ REST Metrics (MetricsController)              │
+└───────────────────────────────────────────────┘
+                 │         │         │
+                 │         │         │
+                 ▼         ▼         ▼
+        TCP Clients   Web Clients   Multicast Listeners
 ```
 
-## Testing Multiple Clients
+---
 
-Open multiple terminal windows and run the client in each. Each client can:
-- Subscribe to different tickers
-- Receive updates independently
-- Connect/disconnect without affecting others
+## Educational Purpose
 
-## Key Concepts Demonstrated
-
-### 1. TCP Sockets
-- ServerSocketChannel for accepting connections
-- SocketChannel for client-server communication
-
-### 2. Multithreading
-- Separate thread for stock price generation
-- Thread pool for handling multiple clients
-- Daemon threads for background tasks
-
-### 3. Java NIO (Non-blocking I/O)
-- SocketChannel + Selector for efficient I/O
-- Non-blocking read/write operations
-- Scalable to hundreds of clients
-
-### 4. Concurrency Control
-- ConcurrentHashMap for thread-safe storage
-- CopyOnWriteArrayList for listener management
-- Volatile flags for thread coordination
-- Proper synchronization and cleanup
-
-### 5. Client-Server Communication
-- Text-based protocol
-- Message framing with newlines
-- Command-response pattern
-- Push-based updates
-
-## Stopping the Server
-
-Press `Ctrl+C` in the server terminal. The server will:
-- Stop accepting new connections
-- Close all client connections
-- Shut down thread pools
-- Release all resources
-
-## Troubleshooting
-
-**Port already in use:**
-```properties
-# Change port in application.properties
-server.port=9091
-```
-
-**Connection refused:**
-- Ensure server is running
-- Check firewall settings
-- Verify correct host and port
-
-**No price updates:**
-- Check if you've subscribed to tickers
-- Use `list` command to verify subscriptions
-- Ensure tickers are uppercase (AAPL, not aapl)
-
-## License
-
-This is an educational project demonstrating server-client architecture with Java NIO.
+This project is designed to help understand **real-time communication, concurrency, and different networking models** using Java and Spring Boot.  
+It shows how to build a system that can broadcast, stream, and monitor live data efficiently.
