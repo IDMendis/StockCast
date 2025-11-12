@@ -5,7 +5,6 @@ import WebSocketService from './services/WebSocketService';
 import StockCard from './components/StockCard';
 import SubscriptionPanel from './components/SubscriptionPanel';
 import ConnectionStatus from './components/ConnectionStatus';
-import LoginForm from './components/LoginForm';
 import MetricsPanel from './components/MetricsPanel';
 
 
@@ -17,8 +16,6 @@ function App() {
   const [stockPrices, setStockPrices] = useState({});
   const [priceHistory, setPriceHistory] = useState({}); // ticker -> [prices]
   const [message, setMessage] = useState('');
-  const [token, setToken] = useState('');
-  const [showLogin, setShowLogin] = useState(true);
 
 
   useEffect(() => {
@@ -46,12 +43,6 @@ function App() {
             setPriceHistory(histories);
           }
           setMessage('Connected to StockCast server!');
-          break;
-        case 'TOKEN':
-          setToken(data.token || data.TOKEN || '');
-          setShowLogin(false);
-          setMessage('Login successful!');
-          setTimeout(() => setMessage(''), 2000);
           break;
         case 'PRICE':
           setStockPrices(prev => ({
@@ -108,22 +99,16 @@ function App() {
   }, []);
 
 
-  const handleLogin = (username, password) => {
-    WebSocketService.sendRaw(`AUTH|${username}|${password}`);
-  };
-
   const handleSubscribe = (tickers) => {
-    if (tickers && tickers.length > 0 && token) {
-      WebSocketService.sendRaw(`SUBSCRIBE|${token}|${tickers.join(',')}`);
+    if (tickers && tickers.length > 0) {
+      WebSocketService.subscribe(tickers);
       setSubscriptions(prev => [...new Set([...prev, ...tickers])]);
     }
   };
 
   const handleUnsubscribe = (ticker) => {
-    if (token) {
-      WebSocketService.sendRaw(`UNSUBSCRIBE|${token}|${ticker}`);
-      setSubscriptions(prev => prev.filter(t => t !== ticker));
-    }
+    WebSocketService.unsubscribe([ticker]);
+    setSubscriptions(prev => prev.filter(t => t !== ticker));
   };
 
 
@@ -143,37 +128,33 @@ function App() {
 
       <MetricsPanel />
 
-      {showLogin ? (
-        <LoginForm onLogin={handleLogin} />
-      ) : (
-        <div className="app-container">
-          <SubscriptionPanel
-            availableTickers={availableTickers}
-            subscriptions={subscriptions}
-            onSubscribe={handleSubscribe}
-            onUnsubscribe={handleUnsubscribe}
-          />
+      <div className="app-container">
+        <SubscriptionPanel
+          availableTickers={availableTickers}
+          subscriptions={subscriptions}
+          onSubscribe={handleSubscribe}
+          onUnsubscribe={handleUnsubscribe}
+        />
 
-          <div className="stock-grid">
-            {subscriptions.length === 0 ? (
-              <div className="empty-state">
-                <h2>No subscriptions yet</h2>
-                <p>Select stocks from the panel to start tracking prices</p>
-              </div>
-            ) : (
-              subscriptions.map(ticker => (
-                <StockCard
-                  key={ticker}
-                  ticker={ticker}
-                  data={stockPrices[ticker]}
-                  history={priceHistory[ticker] || []}
-                  onUnsubscribe={handleUnsubscribe}
-                />
-              ))
-            )}
-          </div>
+        <div className="stock-grid">
+          {subscriptions.length === 0 ? (
+            <div className="empty-state">
+              <h2>No subscriptions yet</h2>
+              <p>Select stocks from the panel to start tracking prices</p>
+            </div>
+          ) : (
+            subscriptions.map(ticker => (
+              <StockCard
+                key={ticker}
+                ticker={ticker}
+                data={stockPrices[ticker]}
+                history={priceHistory[ticker] || []}
+                onUnsubscribe={handleUnsubscribe}
+              />
+            ))
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

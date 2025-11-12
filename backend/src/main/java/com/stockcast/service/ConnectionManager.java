@@ -32,7 +32,6 @@ public class ConnectionManager {
     private final SubscriptionManager subscriptionManager;
     private final BroadcastModule broadcastModule;
     private final StockPriceGenerator stockPriceGenerator;
-    private final AuthenticationService authenticationService;
 
     // Use a dedicated property for the TCP server port so we don't collide
     // with the embedded HTTP server (Tomcat) which also uses `server.port`.
@@ -217,72 +216,28 @@ public class ConnectionManager {
 
         try {
             switch (command) {
-                case "AUTH":
-                    // AUTH|username|password
-                    if (parts.length > 2) {
-                        String username = parts[1];
-                        String password = parts[2];
-                        String token = authenticationService.authenticate(username, password);
-                        ClientInfo client = subscriptionManager.getClient(clientId);
-                        if (client != null) {
-                            broadcastModule.sendToClient(client, "TOKEN|" + token);
-                        }
-                    } else {
-                        ClientInfo client = subscriptionManager.getClient(clientId);
-                        if (client != null) {
-                            broadcastModule.sendToClient(client, "ERROR|Invalid AUTH command");
-                        }
-                    }
-                    break;
-
                 case "SUBSCRIBE":
-                    // SUBSCRIBE|token|TICKER1,TICKER2
-                    if (parts.length > 2) {
-                        String token = parts[1];
-                        if (!authenticationService.isValidToken(token)) {
-                            ClientInfo client = subscriptionManager.getClient(clientId);
-                            if (client != null) {
-                                broadcastModule.sendToClient(client, "ERROR|Invalid or missing token");
-                            }
-                            break;
-                        }
-                        String[] tickers = parts[2].split(",");
+                    if (parts.length > 1) {
+                        String[] tickers = parts[1].split(",");
                         subscriptionManager.subscribe(clientId, tickers);
+
                         ClientInfo client = subscriptionManager.getClient(clientId);
                         if (client != null) {
                             broadcastModule.sendToClient(client,
                                     "ACK|Subscribed to: " + String.join(",", tickers));
                         }
-                    } else {
-                        ClientInfo client = subscriptionManager.getClient(clientId);
-                        if (client != null) {
-                            broadcastModule.sendToClient(client, "ERROR|Missing token or tickers");
-                        }
                     }
                     break;
 
                 case "UNSUBSCRIBE":
-                    // UNSUBSCRIBE|token|TICKER1,TICKER2
-                    if (parts.length > 2) {
-                        String token = parts[1];
-                        if (!authenticationService.isValidToken(token)) {
-                            ClientInfo client = subscriptionManager.getClient(clientId);
-                            if (client != null) {
-                                broadcastModule.sendToClient(client, "ERROR|Invalid or missing token");
-                            }
-                            break;
-                        }
-                        String[] tickers = parts[2].split(",");
+                    if (parts.length > 1) {
+                        String[] tickers = parts[1].split(",");
                         subscriptionManager.unsubscribe(clientId, tickers);
+
                         ClientInfo client = subscriptionManager.getClient(clientId);
                         if (client != null) {
                             broadcastModule.sendToClient(client,
                                     "ACK|Unsubscribed from: " + String.join(",", tickers));
-                        }
-                    } else {
-                        ClientInfo client = subscriptionManager.getClient(clientId);
-                        if (client != null) {
-                            broadcastModule.sendToClient(client, "ERROR|Missing token or tickers");
                         }
                     }
                     break;
