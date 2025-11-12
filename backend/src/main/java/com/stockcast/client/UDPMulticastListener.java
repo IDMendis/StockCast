@@ -50,25 +50,26 @@ public class UDPMulticastListener {
     }
 
     public void start() throws IOException {
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("  StockCast UDP Multicast Listener");
-        System.out.println("═══════════════════════════════════════════════════════════");
-        System.out.println("Joining multicast group: " + multicastAddress + ":" + multicastPort);
-        
-        socket = new MulticastSocket(multicastPort);
-        group = InetAddress.getByName(multicastAddress);
-        
-        // Join the multicast group
-        NetworkInterface netIf = NetworkInterface.getByInetAddress(
-            InetAddress.getLocalHost()
-        );
-        socket.joinGroup(group, netIf);
-        
-        running = true;
-        System.out.println("✓ Connected! Listening for announcements...");
-        System.out.println("Press Ctrl+C to exit");
-        System.out.println("═══════════════════════════════════════════════════════════\n");
-    }
+    System.out.println("═══════════════════════════════════════════════════════════");
+    System.out.println("  StockCast UDP Multicast Listener");
+    System.out.println("═══════════════════════════════════════════════════════════");
+    System.out.println("Joining multicast group: " + multicastAddress + ":" + multicastPort);
+
+    socket = new MulticastSocket(multicastPort);
+    group = InetAddress.getByName(multicastAddress);
+
+    //  Create a SocketAddress for the group
+    var groupAddress = new java.net.InetSocketAddress(group, multicastPort);
+    var netIf = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+
+    // ✅ Join the group using SocketAddress + NetworkInterface
+    socket.joinGroup(groupAddress, netIf);
+
+    running = true;
+    System.out.println("✓ Connected! Listening for announcements...");
+    System.out.println("Press Ctrl+C to exit");
+    System.out.println("═══════════════════════════════════════════════════════════\n");
+}
 
     public void listen() throws IOException {
         byte[] buffer = new byte[1024];
@@ -135,20 +136,22 @@ public class UDPMulticastListener {
     }
 
     public void stop() {
-        running = false;
-        
-        if (socket != null && !socket.isClosed()) {
-            try {
-                NetworkInterface netIf = NetworkInterface.getByInetAddress(
-                    InetAddress.getLocalHost()
-                );
-                socket.leaveGroup(group, netIf);
-            } catch (IOException e) {
-                System.err.println("Error leaving group: " + e.getMessage());
-            }
-            socket.close();
+    running = false;
+
+    if (socket != null && !socket.isClosed()) {
+        try {
+            var groupAddress = new java.net.InetSocketAddress(group, multicastPort);
+            var netIf = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+
+            // ✅ Leave the group using SocketAddress + NetworkInterface
+            socket.leaveGroup(groupAddress, netIf);
+
+        } catch (IOException e) {
+            System.err.println("Error leaving group: " + e.getMessage());
         }
-        
-        System.out.println("\nDisconnected from multicast group");
+        socket.close();
     }
+
+    System.out.println("\nDisconnected from multicast group");
+}
 }
