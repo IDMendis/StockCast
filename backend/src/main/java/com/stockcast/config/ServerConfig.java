@@ -67,9 +67,13 @@ public class ServerConfig {
      */
     @Scheduled(fixedRate = 300000, initialDelay = 10000) // Every 5 minutes
     public void sendPeriodicAnnouncements() {
-        udpBroadcaster.broadcastMarketSummary(
-                String.format("Active clients: %d | Total subscriptions: %d",
-                        metricsService.getTotalActiveClients(),
-                        metricsService.getTotalSubscriptions()));
+        try {
+            udpBroadcaster.broadcastMarketSummary(
+                    String.format("Active clients: %d | Total subscriptions: %d",
+                            metricsService.getTotalActiveClients(),
+                            metricsService.getTotalSubscriptions()));
+        } catch (Exception e) {
+            log.error("Error sending periodic announcements", e);
+        }
     }
 }
