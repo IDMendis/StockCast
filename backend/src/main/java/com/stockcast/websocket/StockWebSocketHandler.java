@@ -154,7 +154,7 @@ public class StockWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastStockPrice(StockPrice stockPrice) {
-        var subscribers = subscriptionManager.getSubscribersForTicker(stockPrice.getTicker());
+        List<WebSocketSession> subscribers = subscriptionManager.getSubscribersForTicker(stockPrice.getTicker());
 
         Map<String, Object> priceMsg = new HashMap<>();
         priceMsg.put("type", "PRICE");
