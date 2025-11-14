@@ -42,7 +42,13 @@ public class StockCastClient {
     public void connect(String host, int port) throws IOException {
         socketChannel = SocketChannel.open();
         socketChannel.connect(new InetSocketAddress(host, port));
-        socketChannel.configureBlocking(false);
+
+        // ✅ USE BLOCKING MODE for reliable write operations
+        // Non-blocking mode requires a Selector which is complex
+        socketChannel.configureBlocking(true);
+
+        System.out.println("DEBUG: Socket connected in BLOCKING mode");
+        System.out.println("DEBUG: Socket connected: " + socketChannel.isConnected());
 
         running = true;
 
@@ -320,39 +326,27 @@ public class StockCastClient {
     private void sendMessage(String message) throws IOException {
         System.out.println("DEBUG: Sending to server: [" + message + "]");
 
-        ByteBuffer buffer = ByteBuffer.wrap(
-                (message + "\n").getBytes(StandardCharsets.UTF_8));
-
         // Ensure the channel is writable
         if (!socketChannel.isConnected()) {
             System.err.println("ERROR: Socket is not connected!");
             return;
         }
 
-        // Write all data and track bytes sent
+        // Create buffer with message + newline delimiter
+        byte[] messageBytes = (message + "\n").getBytes(StandardCharsets.UTF_8);
+        ByteBuffer buffer = ByteBuffer.wrap(messageBytes);
+
+        System.out.println("DEBUG: Buffer size: " + messageBytes.length + " bytes");
+
+        // In BLOCKING mode, write() will block until ALL data is written
         int totalWritten = 0;
-        int attempts = 0;
-        while (buffer.hasRemaining() && attempts < 100) {
+        while (buffer.hasRemaining()) {
             int written = socketChannel.write(buffer);
             totalWritten += written;
-            attempts++;
-
-            if (written == 0) {
-                // Non-blocking channel might return 0, wait a bit
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
+            System.out.println("DEBUG: Wrote " + written + " bytes (total: " + totalWritten + ")");
         }
 
-        System.out.println("DEBUG: Sent " + totalWritten + " bytes to server");
-
-        // Force flush by attempting to write an empty buffer
-        // This ensures data is pushed to the network immediately
-        socketChannel.write(ByteBuffer.allocate(0));
+        System.out.println("DEBUG: ✅ Successfully sent " + totalWritten + " bytes to server");
     }
 
     private void printHelp() {
