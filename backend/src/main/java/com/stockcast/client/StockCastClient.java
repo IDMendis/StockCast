@@ -337,6 +337,8 @@ public class StockCastClient {
         ByteBuffer buffer = ByteBuffer.wrap(messageBytes);
 
         System.out.println("DEBUG: Buffer size: " + messageBytes.length + " bytes");
+        System.out.println("DEBUG: Message with newline: [" + (message + "\n").replace("\n", "\\n") + "]");
+        System.out.println("DEBUG: Hex dump: " + bytesToHex(messageBytes));
 
         // In BLOCKING mode, write() will block until ALL data is written
         int totalWritten = 0;
@@ -347,6 +349,17 @@ public class StockCastClient {
         }
 
         System.out.println("DEBUG: ✅ Successfully sent " + totalWritten + " bytes to server");
+
+        // Verify socket is still connected after write
+        System.out.println("DEBUG: Socket still connected: " + socketChannel.isConnected());
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString().trim();
     }
 
     private void printHelp() {

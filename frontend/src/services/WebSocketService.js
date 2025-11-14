@@ -12,9 +12,20 @@ class WebSocketService {
   }
 
   connect(url = 'ws://localhost:9091/ws/stock') {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
+    // Prevent duplicate connections - check CONNECTING state too
+    if (this.ws && (
+      this.ws.readyState === WebSocket.OPEN || 
+      this.ws.readyState === WebSocket.CONNECTING
+    )) {
+      console.log('WebSocket already connected or connecting (state:', this.ws.readyState, ')');
       return;
+    }
+
+    // Close any existing connection before creating new one
+    if (this.ws) {
+      console.log('Closing existing WebSocket before reconnecting');
+      this.ws.close();
+      this.ws = null;
     }
 
     console.log('Connecting to WebSocket:', url);
