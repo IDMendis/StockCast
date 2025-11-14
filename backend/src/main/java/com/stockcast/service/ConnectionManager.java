@@ -32,6 +32,7 @@ public class ConnectionManager {
     private final SubscriptionManager subscriptionManager;
     private final BroadcastModule broadcastModule;
     private final StockPriceGenerator stockPriceGenerator;
+    private final UDPMulticastBroadcaster udpMulticastBroadcaster;
 
     // Use a dedicated property for the TCP server port so we don't collide
     // with the embedded HTTP server (Tomcat) which also uses `server.port`.
@@ -52,6 +53,7 @@ public class ConnectionManager {
         // Start dependencies
         broadcastModule.start();
         stockPriceGenerator.start();
+        udpMulticastBroadcaster.start();
 
         // Setup stock price listener
         stockPriceGenerator.addListener(this::onStockPriceUpdate);
@@ -299,6 +301,13 @@ public class ConnectionManager {
             // Broadcast to subscribed clients
             broadcastModule.broadcast(stockPrice, subscribers);
         }
+
+        // Always broadcast to UDP multicast (for monitoring/logging purposes)
+        String udpMessage = String.format("[%s] %s: %.2f",
+                java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")),
+                stockPrice.getTicker(),
+                stockPrice.getPrice());
+        udpMulticastBroadcaster.sendAnnouncement("PRICE", udpMessage);
     }
 
     /**
