@@ -80,29 +80,65 @@ public class StockCastClient {
     public void run() throws IOException {
         printHelp();
 
+        // Always use BufferedReader with blocking I/O for reliable command input
         BufferedReader consoleReader = new BufferedReader(
-                new InputStreamReader(System.in));
+                new InputStreamReader(System.in, StandardCharsets.UTF_8));
+
+        System.out.println("\nREADY for commands. Type 'help' for options.");
+        System.out.println("=".repeat(70));
 
         while (running) {
             try {
-                // Check if user has input (non-blocking)
-                if (consoleReader.ready()) {
-                    String input = consoleReader.readLine();
+                // Show prompt
+                System.out.print("\nstockcast> ");
+                System.out.flush();
 
-                    if (input == null || input.equalsIgnoreCase("quit") ||
-                            input.equalsIgnoreCase("exit")) {
-                        break;
-                    }
+                // BLOCKING read - wait for user input
+                String input = consoleReader.readLine();
 
-                    processUserInput(input.trim());
+                if (input == null) {
+                    // EOF or stream closed
+                    break;
                 }
 
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                // Strip control characters
+                input = stripControlCharacters(input).trim();
+
+                System.out.println("DEBUG: Raw input received: [" + input + "] length=" + input.length());
+
+                if (input.equalsIgnoreCase("quit") || input.equalsIgnoreCase("exit")) {
+                    break;
+                }
+
+                if (!input.isEmpty()) {
+                    processUserInput(input);
+                } else {
+                    System.out.println("DEBUG: Empty input ignored");
+                }
+
+            } catch (IOException e) {
+                if (running) {
+                    System.err.println("Input error: " + e.getMessage());
+                    e.printStackTrace();
+                }
                 break;
             }
         }
+    }
+
+    /**
+     * Strip control characters that Windows PowerShell sometimes injects
+     */
+    private String stripControlCharacters(String input) {
+        if (input == null)
+            return "";
+
+        // Remove common control characters (0x00-0x1F except tab, newline, carriage
+        // return)
+        // Also remove Unicode BOM and other invisible characters
+        return input.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "")
+                .replaceAll("\\p{C}", "") // Remove other control characters
+                .trim();
     }
 
     private void receiveMessages() {
@@ -234,6 +270,9 @@ public class StockCastClient {
             return;
         }
 
+        // DEBUG: Show what command we captured
+        System.out.println("DEBUG: Captured command: [" + input + "]");
+
         String[] parts = input.split("\\s+", 2);
         String command = parts[0].toLowerCase();
 
@@ -279,12 +318,41 @@ public class StockCastClient {
     }
 
     private void sendMessage(String message) throws IOException {
+        System.out.println("DEBUG: Sending to server: [" + message + "]");
+
         ByteBuffer buffer = ByteBuffer.wrap(
                 (message + "\n").getBytes(StandardCharsets.UTF_8));
 
-        while (buffer.hasRemaining()) {
-            socketChannel.write(buffer);
+        // Ensure the channel is writable
+        if (!socketChannel.isConnected()) {
+            System.err.println("ERROR: Socket is not connected!");
+            return;
         }
+
+        // Write all data and track bytes sent
+        int totalWritten = 0;
+        int attempts = 0;
+        while (buffer.hasRemaining() && attempts < 100) {
+            int written = socketChannel.write(buffer);
+            totalWritten += written;
+            attempts++;
+
+            if (written == 0) {
+                // Non-blocking channel might return 0, wait a bit
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+
+        System.out.println("DEBUG: Sent " + totalWritten + " bytes to server");
+
+        // Force flush by attempting to write an empty buffer
+        // This ensures data is pushed to the network immediately
+        socketChannel.write(ByteBuffer.allocate(0));
     }
 
     private void printHelp() {
