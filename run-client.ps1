@@ -1,7 +1,7 @@
 # StockCast Client Launcher
 param(
-    [string]$host = "localhost",
-    [int]$port = 9090
+    [string]$serverHost = "localhost",
+    [int]$port = 9092
 )
 
 # Fix Windows PowerShell terminal input issues
@@ -19,7 +19,7 @@ while ([Console]::KeyAvailable) {
 
 Write-Host "✓ Terminal configured" -ForegroundColor Green
 Write-Host ""
-Write-Host "Connecting to StockCast Server at $host`:$port..." -ForegroundColor Green
+Write-Host "Connecting to StockCast Server at $serverHost`:$port..." -ForegroundColor Green
 Write-Host ""
 
 # Compile and run from backend directory
@@ -29,7 +29,7 @@ try {
     
     # Run with proper console mode
     $env:JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
-    java -cp target/classes com.stockcast.client.StockCastClient $host $port
+    java -cp target/classes com.stockcast.client.StockCastClient $serverHost $port
 }
 finally {
     Pop-Location

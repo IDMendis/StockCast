@@ -126,8 +126,8 @@ public class ConnectionManager {
                     String clientId = UUID.randomUUID().toString().substring(0, 8);
                     log.info("New client connected: {}", clientId);
 
-                    // Configure channel
-                    clientChannel.configureBlocking(false);
+                    // Configure channel for blocking mode to prevent race conditions
+                    clientChannel.configureBlocking(true);
 
                     // Register client
                     subscriptionManager.registerClient(clientId, clientChannel);
@@ -191,13 +191,10 @@ public class ConnectionManager {
                     }
                 }
 
-                // Small delay to prevent tight loop
-                Thread.sleep(10);
+                // No sleep needed with blocking I/O - it will wait for data
             }
         } catch (IOException e) {
             log.error("Error handling client {}: {}", clientId, e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         } finally {
             disconnectClient(clientId, channel);
         }
